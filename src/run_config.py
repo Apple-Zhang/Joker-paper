@@ -13,7 +13,7 @@ from static_config   import *
 
 class RuntimeConfig:
     def __init__(self):
-        self.parser = argparse.ArgumentParser(description='Uoker')
+        self.parser = argparse.ArgumentParser(description='Joker')
         self._add_arguments()
         self.config = vars(self.parser.parse_args())
         self.eval_res = None
