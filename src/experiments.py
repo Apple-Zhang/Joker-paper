@@ -1,10 +1,6 @@
 from joker import Joker, InexactJoker
 import torch
-import kernels.kernel as ke
 from optim.criterion import *
-import numpy as np
-# from task.task import make_task
-
 from run_config import RuntimeConfig
 
 run_config = RuntimeConfig()

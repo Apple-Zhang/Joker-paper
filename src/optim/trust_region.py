@@ -1,15 +1,11 @@
 import torch
-import torch.linalg as LA
 from typing import Callable
 from .criterion import DualCriterion
-import copy
-
-from math import log2
 
 class TrustRegionOptimizer:
     """
     Solve the subproblem:
-    J(x[B]) = f(x[B]) + 1/2 x[B]'@K[B,B]@x[B] + x[B]'@K[B,:]@x[!B], s.t. x[B] in [l, u]
+    J(x[B]) = f(x[B]) + 1/2 x[B]'@K[B,B]@x[B] + x[B]'@K[B,~B]@x[~B], s.t. x[B] in [l, u]
     with turst region
     """
     
@@ -159,6 +155,7 @@ class TrustRegionOptimizer:
             # check the non-terminated points that are out of the region
             out_region_ind = (torch.norm(p_next, dim=0) > region_size) & (~terminated)
             if out_region_ind.any():
+                # find the scale to the boundary
                 d_out = d[:, out_region_ind]
                 p_out = p[:, out_region_ind]
                 a = (d_out*d_out).sum(dim=0)

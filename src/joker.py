@@ -1,19 +1,12 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.linalg as LA
+from tqdm import tqdm
+from typing import Callable
 
-from optim.trust_region import TrustRegionOptimizer#, LogLossTrustRegionOptimizer
+from optim.trust_region import TrustRegionOptimizer
 from optim.criterion import DualCriterion
 from optim.blk import data_to_blocks, Block, NormalBlocks, OptimizationBlocks
 from kernels.kernel import KernelBase
 from optim.criterion import LogLoss
-from tqdm import tqdm
-
-from typing import Callable
-
-eps_float64 = torch.finfo(torch.float64).eps
-eps_float32 = torch.finfo(torch.float32).eps
 
 class Joker:
     def __init__(self, x: torch.Tensor, y: torch.Tensor, dtype: torch.dtype,

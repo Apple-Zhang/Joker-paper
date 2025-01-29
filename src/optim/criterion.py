@@ -76,11 +76,6 @@ class LogLoss(DualCriterion):
     def grad(self, alpha: torch.Tensor, y: torch.Tensor):
         alpha_y = alpha * y
         grad = y * (alpha_y/(self.c-alpha_y)).log()
-        # close_to_lower = (alpha_y < self.theta)
-        # close_to_upper = ((self.c - alpha_y) < self.theta)
-        # grad[close_to_lower] = self.sur_curve_grad * y[close_to_lower]
-        # grad[close_to_upper] = -(self.sur_curve_grad + self.sur_curve_hess * self.c) * y[close_to_upper]
-
         return grad
 
     def hess(self, alpha: torch.Tensor, y: torch.Tensor):
@@ -89,7 +84,6 @@ class LogLoss(DualCriterion):
 
         # to avoid cancellation, hess should have a upper bound
         hess = torch.clamp(hess, max=self.max_hess)
-
         return hess
     
     def primal_obj(self, y_pred: torch.Tensor, y: torch.Tensor):

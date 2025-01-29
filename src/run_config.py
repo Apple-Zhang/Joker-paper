@@ -21,9 +21,6 @@ class RuntimeConfig:
         self.config["device"] = torch.device(self.config["device"])
         self.config["dtype"] = torch.float64 if self.config["dtype"] == "float64" or self.config["dtype"] == "double" else torch.float32
 
-        # if self.config["nystr_size"] != -1:
-        #     raise NotImplementedError("Nyström approximation is not implemented yet")
-
     def _add_arguments(self):
         self.parser.add_argument('--no-transform', action="store_false", dest="do_transform", help='Whether to transform the data')
         self.parser.add_argument('--no-target_transform', action="store_false", dest="do_target_transform", help='Whether to transform the target data')
