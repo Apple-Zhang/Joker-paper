@@ -13,25 +13,25 @@ where $c$ is the penalty parameter, equivalent to $1/\lambda$ in the paper.
 
 ```
 # MSD
-python experiments.py --dataset msd --criterion mse --c 1.0 --verbose_freq 5000 --max_iter 20000 --data_blksz 2048 --blksz 2048 --kernel rbf --n_rff -1 --max_trust_region_size 4 --region_shrink_rate 0.8
+python experiments.py --dataset msd --criterion mse --c 1.0 --verbose_freq 5000 --max_iter 10000 --data_blksz 2048 --blksz 2048 --kernel rbf --n_rff -1
 ```
 
 ```
 # HEPC
-python experiments.py --dataset houseelec --criterion mse --c 128.0 --verbose_freq 5000 --max_iter 20000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000 --max_trust_region_size 4 --region_shrink_rate 0.6
+python experiments.py --dataset houseelec --criterion mse --c 128.0 --verbose_freq 5000 --max_iter 20000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000
 ```
 
 ```
 # SUSY
-python experiments.py --dataset houseelec --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 20000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000 --max_trust_region_size 4 --region_shrink_rate 0.8
+python experiments.py --dataset houseelec --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 15000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000
 ```
 
 ```
-# HIGGS
-python experiments.py --dataset higgs --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 50000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000 --max_trust_region_size 4 --region_shrink_rate 0.8
+# HIGG
+python experiments.py --dataset higgs --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 35000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000
 ```
 
 ```
 # CIFAR-5M
-python experiments.py --dataset cifar5m --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 20000 --data_blksz 512 --blksz 512 --kernel rbf --n_rff 200000 --max_trust_region_size 4 --region_shrink_rate 0.8
+python experiments.py --dataset cifar5m --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 40000 --data_blksz 512 --blksz 512 --kernel rbf --n_rff 200000
 ```
