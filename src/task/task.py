@@ -68,19 +68,12 @@ class MillionSong:
             y_pred_raw = y_pred.to('cpu') / self.target_transform.istd + self.target_transform.mean
             y_test_raw = self.y_test.to('cpu') / self.target_transform.istd + self.target_transform.mean
 
-        # y_pred_np = y_pred.to('cpu').numpy()
-        # y_test_np = self.y_test.to('cpu').numpy()
         y_pred_raw_np = y_pred_raw.numpy()
         y_test_raw_np = y_test_raw.numpy()
 
-        # mse = mean_squared_error(y_test_np, y_pred_np) * 0.5
         mse_raw = mean_squared_error(y_test_raw_np, y_pred_raw_np)
         rel_err = mean_squared_error(y_test_raw_np / y_test_raw_np, y_pred_raw_np / y_test_raw_np) ** 0.5
-        # r2  = r2_score(y_test_np, y_pred_np)
-        # pearson = np.corrcoef(y_test_np.squeeze(), y_pred_np.squeeze())[0,1]
-        # mae_raw = np.mean(np.abs(y_test_raw_np - y_pred_raw_np))
 
-        # return {".5mse": mse, "mse-raw": mse_raw, "rel_err": rel_err, "r2": r2, "pearson": pearson, "mae-raw": mae_raw}
         return {"mse-raw": mse_raw, "rel_err": rel_err}
     
 class Susy:
@@ -218,10 +211,10 @@ class Cifar5M:
 class HouseElec:
     def __init__(self, do_transform=True, do_target_transform=True):
         self.name = "houseelec"
-        train = np.load(f'{DATA_DIR}/houseelec/train_data.npz')
+        train = np.load(f'{DATA_DIR}/hepc/train_data.npz')
         self.X_train = torch.from_numpy(train['x_train']).float()
         self.y_train = torch.from_numpy(train['y_train']).float()
-        test = np.load(f'{DATA_DIR}/houseelec/test_data.npz')
+        test = np.load(f'{DATA_DIR}/hepc/test_data.npz')
         self.X_test = torch.from_numpy(test['x_test']).float()
         self.y_test = torch.from_numpy(test['y_test']).float()
 
