@@ -23,7 +23,7 @@ python experiments.py --dataset houseelec --criterion mse --c 128.0 --verbose_fr
 
 ```
 # SUSY
-python experiments.py --dataset houseelec --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 15000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000
+python experiments.py --dataset susy --criterion svm --c 32.0 --verbose_freq 5000 --max_iter 15000 --data_blksz 512 --blksz 512 --kernel lap --n_rff 100000
 ```
 
 ```
