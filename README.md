@@ -1,13 +1,13 @@
 # Joker-paper
 Implementation of "Joker: Joint Optimization Framework for Lightweight Kernel Machines".
 The problem is:
-$$
+```math
 \min_{\theta}\frac12\langle\theta,\theta\rangle + c\sum_{i=1}^n\ell(y_i,\langle\theta,\varphi(x_i)\rangle),
-$$
+```
 where $c$ is the penalty parameter, equivalent to $1/\lambda$ in the paper.
 
 ## How to use:
-1. Download the dataset. Please follow `README.md` in each data fold.
+1. Download the dataset. Please follow `README.md` in each data folder.
 2. Go to `src` folder, and run `python experiments.py`. Here are some examples:
 
 
