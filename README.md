@@ -1,5 +1,5 @@
 # Joker-paper
-Implementation of "Joker: Joint Optimization Framework for Lightweight Kernel Machines".
+Official implementation of [Joker: Joint Optimization Framework for Lightweight Kernel Machines](https://arxiv.org/abs/2505.17765).
 The problem is:
 ```math
 \min_{\theta}\frac12\langle\theta,\theta\rangle + c\sum_{i=1}^n\ell(y_i,\langle\theta,\varphi(x_i)\rangle),
@@ -35,3 +35,14 @@ python experiments.py --dataset higgs --criterion svm --c 128.0 --verbose_freq 5
 # CIFAR-5M
 python experiments.py --dataset cifar5m --criterion svm --c 128.0 --verbose_freq 5000 --max_iter 40000 --data_blksz 512 --blksz 512 --kernel rbf --n_rff 200000
 ```
+
+If you find this repo useful, please cite our work via:
+@inproceedings{ZhangJoker2025,
+  title = {Joker: {{Joint Optimization Framework}} for {{Lightweight Kernel Machines}}},
+  booktitle = {International {{Conference}} on {{Machine Learning}} ({{ICML}})},
+  author = {Zhang, Junhong and Lai, Zhihui},
+  year = {2025},
+  volume = {},
+  pages = {},
+  publisher = {PRML},
+}
