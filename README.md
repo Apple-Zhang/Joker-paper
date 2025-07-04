@@ -37,6 +37,7 @@ python experiments.py --dataset cifar5m --criterion svm --c 128.0 --verbose_freq
 ```
 
 If you find this repo useful, please cite our work via:
+```
 @inproceedings{ZhangJoker2025,
   title = {Joker: {{Joint Optimization Framework}} for {{Lightweight Kernel Machines}}},
   booktitle = {International {{Conference}} on {{Machine Learning}} ({{ICML}})},
@@ -46,3 +47,4 @@ If you find this repo useful, please cite our work via:
   pages = {},
   publisher = {PRML},
 }
+```
