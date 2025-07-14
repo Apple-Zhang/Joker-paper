@@ -38,13 +38,11 @@ python experiments.py --dataset cifar5m --criterion svm --c 128.0 --verbose_freq
 
 If you find this repo useful, please cite our work via:
 ```
-@inproceedings{ZhangJoker2025,
-  title = {Joker: {{Joint Optimization Framework}} for {{Lightweight Kernel Machines}}},
-  booktitle = {International {{Conference}} on {{Machine Learning}} ({{ICML}})},
-  author = {Zhang, Junhong and Lai, Zhihui},
-  year = {2025},
-  volume = {},
-  pages = {},
-  publisher = {PRML},
+@inproceedings{zhang2025joker,
+title={Joker: Joint Optimization Framework for Lightweight Kernel Machines},
+author={Junhong Zhang and Zhihui Lai},
+booktitle={Forty-second International Conference on Machine Learning},
+year={2025},
+url={https://openreview.net/forum?id=hRWcT3AH7Y}
 }
 ```
