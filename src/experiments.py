@@ -1,6 +1,6 @@
 from joker import Joker, InexactJoker
 import torch
-from optim.criterion import *
+from criterion.collections import *
 from run_config import RuntimeConfig
 
 run_config = RuntimeConfig()
@@ -31,7 +31,8 @@ if cfg["n_rff"] > 0:
                          opt_blksz=cfg["blksz"],
                          data_blksz=cfg["data_blksz"],
                          incore=cfg["incore"],
-                         inexact_type="rff")
+                         inexact_type="rff",
+                         optim=cfg["optim"])
 elif cfg["n_fastfood"] > 0:
     # Fastfood, better option when the dimension of the data is high d~10^5 (O(nlogd) time and O(n) space)
     n_ff = cfg["n_fastfood"]
@@ -40,14 +41,16 @@ elif cfg["n_fastfood"] > 0:
                          opt_blksz=cfg["blksz"],
                          data_blksz=cfg["data_blksz"],
                          incore=cfg["incore"],
-                         inexact_type="fastfood")
+                         inexact_type="fastfood",
+                         optim=cfg["optim"])
 else:
     # Exact model
     model = Joker(X_train, y_train, dtype=cfg["dtype"], kernel=kernel, criterion=criterion,
                   device=cfg["device"],
                   opt_blksz=cfg["blksz"],
                   incore=cfg["incore"],
-                  data_blksz=cfg["data_blksz"])
+                  data_blksz=cfg["data_blksz"],
+                  optim=cfg["optim"])
 
 # Start training
 model.fit(max_iter=cfg["max_iter"],
@@ -56,7 +59,6 @@ model.fit(max_iter=cfg["max_iter"],
         verbose_freq=cfg["verbose_freq"],
         region_shrink_freq=cfg["region_shrink_freq"],
         region_shrink_rate=cfg["region_shrink_rate"],
-        do_precond=cfg["do_precond"],
         blk_strategy=cfg["blk_strategy"],
         val_x=X_test,
         val_y=y_test,

@@ -41,20 +41,6 @@ class DualCriterion(ABC):
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"(c={self.c})"
-    
-def make_criterion(criterion: str, c: float = 1.0, **kwargs) -> DualCriterion:
-    if criterion == "mse":
-        return MeanSquareError(c=c)
-    elif criterion == "huber":
-        return Huber(c=c, delta=kwargs["delta"])
-    elif criterion == "svm":
-        return SquaredHinge(c=c)
-    elif criterion == "log":
-        return LogLoss(c=c, dtype=kwargs["dtype"])
-    elif criterion == "svr":
-        return eps_insensitive(c=c, eps=kwargs["eps"])
-    else:
-        raise ValueError(f"Unknown criterion: {criterion}")
         
 class LogLoss(DualCriterion):
     def __init__(self, c: float = 1.0, dtype: torch.dtype = torch.float64): # c = 1 / reg_lambda
@@ -181,9 +167,9 @@ class Huber(DualCriterion):
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"(c={self.c}, delta={self.delta})"
     
-class eps_insensitive(DualCriterion):
+class EpsInsensitive(DualCriterion):
     def __init__(self, c: float = 1.0, eps: float = 0.1):
-        super(eps_insensitive, self).__init__(c)
+        super(EpsInsensitive, self).__init__(c)
         self.task_type = "regression"
         self.box_lower = -c
         self.box_upper = c

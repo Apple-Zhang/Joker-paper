@@ -1,0 +1,23 @@
+[project]
+name = "joker-paper"
+version = "0.1.0"
+description = "Joker: Joint Optimization Framework for Lightweight Kernel Machines"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy<2",
+    "pandas",
+    "scikit-learn",
+    "scipy",
+    "tqdm",
+    "torch>=2.0",
+    "pykeops>=2.3",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true

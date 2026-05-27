@@ -26,20 +26,49 @@ def _tstudent(x: torch.Tensor, y: torch.Tensor, gamma: float):
     d2.reciprocal_()
     return d2
 
+class KernelMatvecOperator:
+    """Wrapper around kernel_matvec that supports @ for fused K @ v products."""
+    def __init__(self, kernel_matvec_fn: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor],
+                 x: torch.Tensor):
+        self._matvec = kernel_matvec_fn
+        self.x = x
+
+    def __matmul__(self, v: torch.Tensor) -> torch.Tensor:
+        return self._matvec(self.x, self.x, v)
+
+
 class KernelBase:
+    _use_keops = True  # class-level flag for --no-keops
+
     def __init__(self, kernel="rbf"):
         self.name = kernel
         self.apply_inexact_map = None
 
     def __call__(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError("Kernel not implemented")
-    
+
     def init_inexact(self, dim: int, n_features: int, device="cuda:0", inexact_type="rff", dtype=torch.float32):
         raise NotImplementedError("Inexact model not implemented for this kernel yet")
-    
+
+    def kernel_matvec(self, x_i: torch.Tensor, x_j: torch.Tensor, v_j: torch.Tensor) -> torch.Tensor:
+        """Fused K(x_i, x_j) @ v_j. Uses KeOps-style fused path or dense fallback."""
+        x_i = x_i.contiguous().to(device=x_i.device, dtype=x_i.dtype)
+        x_j = x_j.contiguous().to(device=x_i.device, dtype=x_i.dtype)
+        v_j = v_j.contiguous().to(device=x_i.device, dtype=x_i.dtype)
+        if KernelBase._use_keops:
+            try:
+                return self._fused_matvec_impl(x_i, x_j, v_j)
+            except Exception as e:
+                print(f"Fused matvec failed ({e}), falling back to dense.")
+        return self(x_i, x_j) @ v_j
+
+    def _fused_matvec_impl(self, x_i: torch.Tensor, x_j: torch.Tensor, v_j: torch.Tensor) -> torch.Tensor:
+        """Override per kernel. Default: materialize K and multiply."""
+        return self(x_i, x_j) @ v_j
+
     def __repr__(self) -> str:
         return f"Kernel({self.name})"
-    
+
     def __str__(self) -> str:
         return f"Kernel({self.name})"
     
@@ -51,6 +80,12 @@ class KeRBF(KernelBase):
     def __call__(self, x: torch.Tensor, y: torch.Tensor):
         return _gaussian(x, y, self.gamma)
     
+    def _fused_matvec_impl(self, x_i: torch.Tensor, x_j: torch.Tensor, v_j: torch.Tensor) -> torch.Tensor:
+        d2 = (x_i * x_i).sum(dim=1, keepdim=True) + (x_j * x_j).sum(dim=1) - 2 * x_i @ x_j.t()
+        d2.clamp_min_(0)
+        K = (-self.gamma * d2).exp_()
+        return K @ v_j
+
     def init_inexact(self, dim: int, n_features: int, inexact_type="rff", device="cuda:0", dtype=torch.float32):
         if inexact_type == "rff":
             self.W = torch.randn(dim, n_features, device=device, dtype=dtype) * ((2.0 * self.gamma) ** 0.5)
@@ -64,14 +99,14 @@ class KeRBF(KernelBase):
             print("Warning: Fastfood is experimental and may not work as expected")
         else:
             raise ValueError(f"Unsupported inexact type: {inexact_type}")
-    
+
     def __repr__(self) -> str:
         return f"Kernel({self.name}, gamma={self.gamma})"
-    
+
     def __str__(self) -> str:
         return f"Kernel({self.name}, gamma={self.gamma})"
-    
-    
+
+
 class KeLinear(KernelBase):
     def __init__(self):
         super().__init__("linear")
@@ -124,10 +159,18 @@ class KeStudenT(KernelBase):
 
     def __call__(self, x: torch.Tensor, y: torch.Tensor):
         return _tstudent(x, y, self.gamma)
-    
+
+    def _fused_matvec_impl(self, x_i: torch.Tensor, x_j: torch.Tensor, v_j: torch.Tensor) -> torch.Tensor:
+        d2 = (x_i * x_i).sum(dim=1, keepdim=True) + (x_j * x_j).sum(dim=1) - 2 * x_i @ x_j.t()
+        d2.clamp_min_(0)
+        d2 *= self.gamma
+        d2 += 1
+        K = d2.reciprocal_()
+        return K @ v_j
+
     def __repr__(self) -> str:
         return f"Kernel({self.name}, gamma={self.gamma})"
-    
+
     def __str__(self) -> str:
         return f"Kernel({self.name}, gamma={self.gamma})"
     
@@ -141,8 +184,12 @@ class KeLaplace(KernelBase):
         gram *= -self.gamma
         gram.exp_()
         return gram
-        # return torch.exp(-dist_matrix * self.gamma)
-    
+
+    def _fused_matvec_impl(self, x_i: torch.Tensor, x_j: torch.Tensor, v_j: torch.Tensor) -> torch.Tensor:
+        d = torch.cdist(x_i, x_j, p=1)
+        K = (-self.gamma * d).exp_()
+        return K @ v_j
+
     def init_inexact(self, dim: int, n_features: int, device="cuda:0", inexact_type="rff", dtype=torch.float64):
         if inexact_type == "rff":
             cauchy = torch.distributions.cauchy.Cauchy(0, self.gamma)

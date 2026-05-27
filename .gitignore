@@ -4,3 +4,5 @@ __pycache__
 *.npz
 *.npy
 *.csv
+.venv
+.uv_cache

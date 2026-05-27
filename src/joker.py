@@ -2,16 +2,16 @@ import torch
 from tqdm import tqdm
 from typing import Callable
 
-from optim.trust_region import TrustRegionOptimizer
-from optim.criterion import DualCriterion
-from optim.blk import data_to_blocks, Block, NormalBlocks, OptimizationBlocks
-from kernels.kernel import KernelBase
-from optim.criterion import LogLoss
+from optim import make_optimizer
+from criterion.collections import DualCriterion
+from data.blk import data_to_blocks, Block, NormalBlocks, OptimizationBlocks
+from kernels.kernel import KernelBase, KernelMatvecOperator
+from criterion.collections import LogLoss
 
 class Joker:
     def __init__(self, x: torch.Tensor, y: torch.Tensor, dtype: torch.dtype,
                  kernel: KernelBase, criterion: DualCriterion,
-                 data_blksz=2048, opt_blksz=512, device="cuda:0", incore=True, **kwargs):
+                 data_blksz=2048, opt_blksz=512, device="cuda:0", incore=True, optim="trust_region", **kwargs):
         self.device = device
         self.dtype = dtype
 
@@ -64,13 +64,14 @@ class Joker:
         self.gram_fcn  = lambda x: self.kernel(x, x)
         
         # set the optimizer
-        self.optim = TrustRegionOptimizer()
+        self.optim = make_optimizer(optim)
 
         print("Model Initialization ready:")
         print(f"Kernel: {kernel}")
         print(f"The block size for optimization: {self.opt_blksz}")
         print(f"Start fitting with criterion: {self.criterion}, dtype: {self.dtype}")
         print(f"Device: {self.device}")
+        print(f"Optimizer: {self.optim}")
 
     @torch.no_grad()
     def predict(self, x: torch.Tensor, y: torch.Tensor = None):
@@ -82,7 +83,7 @@ class Joker:
     @torch.no_grad()
     def gram_and_grad(self, blk: Block):
         blk_data = blk.data.to(self.device, dtype=self.dtype)
-        K_blk  = self.gram_fcn(blk_data)
+        K_blk  = KernelMatvecOperator(self.kernel.kernel_matvec, blk_data)
         K_grad = self.kgrad(blk)
         return K_blk, K_grad
     
@@ -238,8 +239,8 @@ class Joker:
 class InexactJoker(Joker):
     def __init__(self, x: torch.Tensor, y: torch.Tensor, dtype: torch.dtype,
                  kernel: KernelBase, criterion: DualCriterion, n_features: int,
-                 data_blksz=8192, opt_blksz=1024, device="cuda:0", feature_type="rff", **kwargs):
-        super().__init__(x, y, dtype, kernel, criterion, data_blksz, opt_blksz, device)
+                 data_blksz=8192, opt_blksz=1024, device="cuda:0", feature_type="rff", optim="trust_region", **kwargs):
+        super().__init__(x, y, dtype, kernel, criterion, data_blksz, opt_blksz, device, optim=optim, **kwargs)
         
         self.kernel.init_inexact(x.size(1), n_features, inexact_type=feature_type, device=device, dtype=dtype)
 
@@ -256,7 +257,7 @@ class InexactJoker(Joker):
         # redefine the kernel evaluation functions
         self.pred_fcn = self._eval_fcn
         self.gram_fcn = self._gram_fcn
-        print(f"Reminder: nexact model used with feature_type: {feature_type}, n_features: {n_features}.")
+        print(f"Reminder: Inexact model used with feature_type: {feature_type}, n_features: {n_features}.")
 
     @torch.no_grad()
     def kgrad(self, blk: Block):

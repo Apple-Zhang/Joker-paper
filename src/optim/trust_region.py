@@ -1,6 +1,6 @@
 import torch
 from typing import Callable
-from .criterion import DualCriterion
+from criterion.collections import DualCriterion
 
 class TrustRegionOptimizer:
     """

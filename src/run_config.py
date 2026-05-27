@@ -7,8 +7,9 @@ import argparse
 from   typing        import Dict
 
 from task.task       import make_task
-from optim.criterion import make_criterion
-from kernels.kernel  import make_kernel
+from criterion import make_criterion
+from kernels.kernel  import make_kernel, KernelBase
+from optim            import make_optimizer
 from static_config   import *
 
 class RuntimeConfig:
@@ -21,6 +22,9 @@ class RuntimeConfig:
         self.config["device"] = torch.device(self.config["device"])
         self.config["dtype"] = torch.float64 if self.config["dtype"] == "float64" or self.config["dtype"] == "double" else torch.float32
 
+        if self.config.get("no_keops"):
+            KernelBase._use_keops = False
+
     def _add_arguments(self):
         self.parser.add_argument('--no-transform', action="store_false", dest="do_transform", help='Whether to transform the data')
         self.parser.add_argument('--no-target_transform', action="store_false", dest="do_target_transform", help='Whether to transform the target data')
@@ -30,12 +34,12 @@ class RuntimeConfig:
         self.parser.add_argument('--eps_insensitive', type=float, default=-1, help='Regularization parameter lambda')
         self.parser.add_argument("--data_blksz", type=int, default=2048, help="The block size for data loading")
         self.parser.add_argument("--blksz", type=int, default=512, help="The block size for optimization")
-        self.parser.add_argument("--blk_strategy", type=str, default="random", choices=["random", "cylic"], help="How to choose the block during optimization")
+        self.parser.add_argument("--blk_strategy", type=str, default="random", choices=["random", "cyclic"], help="How to choose the block during optimization")
         self.parser.add_argument('--max_iter', type=int, default=20000, help='Maximum number of iterations for fitting')
         self.parser.add_argument('--max_iter_subprob', type=int, default=50, help='Maximum number of iterations for fitting')
         self.parser.add_argument("--max_trust_region_size", type=float, default=64, help="The maximal trust region size")
         self.parser.add_argument("--region_shrink_freq", type=int, default=1000, help="Frequency of region shrink")
-        self.parser.add_argument("--region_shrink_rate", type=float, default=0.9, help="Rate of region shrink")
+        self.parser.add_argument("--region_shrink_rate", type=float, default=0.5, help="Rate of region shrink")
         self.parser.add_argument('--verbose_freq', type=int, default=5000, help='Frequency of verbose output during fitting')
         self.parser.add_argument("--device", type=str, default="cuda:0", help="Device to run the code")
         self.parser.add_argument("--dtype", type=str, default="float32", help="Data type to use")
@@ -46,6 +50,8 @@ class RuntimeConfig:
         self.parser.add_argument("--n_fastfood", type=int, default=-1, help="Number of samples for Fastfood approximation, negative means full kernel")
         self.parser.add_argument("--no-incore", action="store_false", dest="incore", help="Whether place the data into GPU")
         self.parser.add_argument("--kernel-sig", type=float, default=-1, help="The sigma parameter in gaussian kernel. -1 denotes default (mean of pair-wise squared distance)")
+        self.parser.add_argument("--optim", type=str, default="trust_region", choices=["trust_region", "tncg"], help="Optimizer for block subproblems")
+        self.parser.add_argument("--no-keops", action="store_true", help="Disable KeOps fused kernel-matvec, use dense fallback")
 
     def get_task(self):
         return make_task(self.config["dataset"], do_transform=self.config["do_transform"], do_target_transform=self.config["do_target_transform"])
@@ -53,6 +59,9 @@ class RuntimeConfig:
     def get_criterion(self):
         return make_criterion(self.config["criterion"], c=self.config["c"], delta=self.config["delta_huber"], eps=self.config["eps_insensitive"], dtype=self.config["dtype"])
     
+    def get_optimizer(self):
+        return make_optimizer(self.config["optim"])
+
     def get_kernel(self, gamma=1.0, d=2):
         if self.config["kernel_sig"] > 0:
             if self.config["kernel"] == "rbf":
